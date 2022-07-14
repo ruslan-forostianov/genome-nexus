@@ -184,7 +184,8 @@ public class GenomicLocationAnnotationServiceImpl implements GenomicLocationAnno
         List<String> convert(List<GenomicLocation> genomicLocation);
     }
 
-    public Function<GenomicLocation, String> getGenomicLocationToVariantFormat() {
-        return genomicLocationToVariantFormat::convert;
+    @Override
+    public String getVariantFormat(GenomicLocation genomicLocation) {
+        return genomicLocationToVariantFormat.convert(genomicLocation);
     }
 }
