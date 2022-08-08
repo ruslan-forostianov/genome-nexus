@@ -41,6 +41,7 @@ import org.cbioportal.genome_nexus.service.VariantAnnotationService;
 import org.cbioportal.genome_nexus.service.exception.CancerHotspotsWebServiceException;
 import org.cbioportal.genome_nexus.service.exception.VariantAnnotationNotFoundException;
 import org.cbioportal.genome_nexus.service.exception.VariantAnnotationWebServiceException;
+import org.cbioportal.genome_nexus.util.GenomicVariant;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -170,15 +171,20 @@ public class CancerHotspotServiceImpl implements CancerHotspotService
     {
         List<VariantAnnotation> variantAnnotations = this.genomicLocationAnnotationService.getAnnotations(genomicLocations);
 
-        Map<String, GenomicLocation> variantToGenomicLocation = genomicLocations.stream()
-            .collect(Collectors.toMap(genomicLocationAnnotationService::getVariantFormat, Function.identity()));
         List<AggregatedHotspots> hotspots = new ArrayList<>();
         for (VariantAnnotation variantAnnotation : variantAnnotations)
         {
             AggregatedHotspots aggregatedHotspots = new AggregatedHotspots();
             aggregatedHotspots.setHotspots(this.getHotspotAnnotations(variantAnnotation));
             aggregatedHotspots.setVariant(variantAnnotation.getVariant());
-            aggregatedHotspots.setGenomicLocation(variantToGenomicLocation.get(variantAnnotation.getVariant()));
+            GenomicLocation genomicLocation = new GenomicLocation();
+            genomicLocation.setChromosome(variantAnnotation.getSeqRegionName());
+            genomicLocation.setStart(variantAnnotation.getStart());
+            genomicLocation.setEnd(variantAnnotation.getEnd());
+            String[] split = variantAnnotation.getAlleleString().split("/");
+            genomicLocation.setReferenceAllele(split[0]);
+            genomicLocation.setVariantAllele(split[1]);
+            aggregatedHotspots.setGenomicLocation(genomicLocation);
             hotspots.add(aggregatedHotspots);
         }
 
