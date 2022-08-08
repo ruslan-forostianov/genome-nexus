@@ -169,21 +169,19 @@ public class CancerHotspotServiceImpl implements CancerHotspotService
     public List<AggregatedHotspots> getHotspotAnnotationsByGenomicLocations(List<GenomicLocation> genomicLocations)
         throws CancerHotspotsWebServiceException
     {
-        List<VariantAnnotation> variantAnnotations = this.genomicLocationAnnotationService.getAnnotations(genomicLocations);
-
         List<AggregatedHotspots> hotspots = new ArrayList<>();
-        for (VariantAnnotation variantAnnotation : variantAnnotations)
-        {
+        for (GenomicLocation genomicLocation: genomicLocations) {
+            VariantAnnotation variantAnnotation = null;
+            try {
+                variantAnnotation = this.genomicLocationAnnotationService.getAnnotation(genomicLocation);
+            } catch (VariantAnnotationNotFoundException e) {
+                throw new RuntimeException(e);
+            } catch (VariantAnnotationWebServiceException e) {
+                throw new RuntimeException(e);
+            }
             AggregatedHotspots aggregatedHotspots = new AggregatedHotspots();
             aggregatedHotspots.setHotspots(this.getHotspotAnnotations(variantAnnotation));
             aggregatedHotspots.setVariant(variantAnnotation.getVariant());
-            GenomicLocation genomicLocation = new GenomicLocation();
-            genomicLocation.setChromosome(variantAnnotation.getSeqRegionName());
-            genomicLocation.setStart(variantAnnotation.getStart());
-            genomicLocation.setEnd(variantAnnotation.getEnd());
-            String[] split = variantAnnotation.getAlleleString().split("/");
-            genomicLocation.setReferenceAllele(split[0]);
-            genomicLocation.setVariantAllele(split[1]);
             aggregatedHotspots.setGenomicLocation(genomicLocation);
             hotspots.add(aggregatedHotspots);
         }
